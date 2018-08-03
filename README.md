@@ -4,6 +4,7 @@ A **gross hack** to use discard shaders while waiting for real shaders to compil
 
 ### Games tested
 * Path of Exile: seems fine
+* Overwatch: graphic bugs on first matches, seems fine after playing for a while
 
 
 ### Instructions
