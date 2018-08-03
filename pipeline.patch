@@ -1,8 +1,8 @@
 diff --git a/README.md b/README.md
-index 6523a24..4b781a7 100644
+index 3ac2dc8..5ad128d 100644
 --- a/README.md
 +++ b/README.md
-@@ -85,6 +85,7 @@ The following environment variables can be used for **debugging** purposes.
+@@ -86,6 +86,7 @@ The following environment variables can be used for **debugging** purposes.
  - `DXVK_LOG_LEVEL=none|error|warn|info|debug` Controls message logging
  - `DXVK_FAKE_DX10_SUPPORT=1` Advertizes support for D3D10 interfaces
  - `DXVK_USE_PIPECOMPILER=1` Enable asynchronous pipeline compilation. This currently only has an effect on RADV in mesa-git.
@@ -11,10 +11,10 @@ index 6523a24..4b781a7 100644
  ## Troubleshooting
  DXVK requires threading support from your mingw-w64 build environment. If you
 diff --git a/src/dxvk/dxvk_graphics.cpp b/src/dxvk/dxvk_graphics.cpp
-index 844f676..2a6cab8 100644
+index 52440c9..1562416 100644
 --- a/src/dxvk/dxvk_graphics.cpp
 +++ b/src/dxvk/dxvk_graphics.cpp
-@@ -89,6 +89,14 @@ namespace dxvk {
+@@ -93,6 +93,14 @@ namespace dxvk {
      
      m_common.msSampleShadingEnable = fs != nullptr && fs->hasCapability(spv::CapabilitySampleRateShading);
      m_common.msSampleShadingFactor = 1.0f;
@@ -29,7 +29,7 @@ index 844f676..2a6cab8 100644
    }
    
    
-@@ -193,7 +201,7 @@ namespace dxvk {
+@@ -197,7 +205,7 @@ namespace dxvk {
            VkPipelineCreateFlags          createFlags,
            VkPipeline                     baseHandle) const {
      if (Logger::logLevel() <= LogLevel::Debug) {
@@ -38,7 +38,7 @@ index 844f676..2a6cab8 100644
        this->logPipelineState(LogLevel::Debug, state);
      }
      
-@@ -218,11 +226,21 @@ namespace dxvk {
+@@ -223,11 +231,21 @@ namespace dxvk {
      
      std::vector<VkPipelineShaderStageCreateInfo> stages;
      
@@ -62,7 +62,7 @@ index 844f676..2a6cab8 100644
      
      std::array<VkVertexInputBindingDivisorDescriptionEXT, MaxNumVertexBindings> viDivisorDesc;
      uint32_t                                                                    viDivisorCount = 0;
-@@ -380,7 +398,7 @@ namespace dxvk {
+@@ -385,7 +403,7 @@ namespace dxvk {
      
      auto t1 = std::chrono::high_resolution_clock::now();
      auto td = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
@@ -71,7 +71,7 @@ index 844f676..2a6cab8 100644
      return pipeline;
    }
    
-@@ -419,4 +437,4 @@ namespace dxvk {
+@@ -424,4 +442,4 @@ namespace dxvk {
      // TODO log more pipeline state
    }
    
@@ -79,10 +79,10 @@ index 844f676..2a6cab8 100644
 \ No newline at end of file
 +}
 diff --git a/src/dxvk/dxvk_graphics.h b/src/dxvk/dxvk_graphics.h
-index ad1de14..faedc35 100644
+index cd860b3..e362cef 100644
 --- a/src/dxvk/dxvk_graphics.h
 +++ b/src/dxvk/dxvk_graphics.h
-@@ -243,6 +243,8 @@ namespace dxvk {
+@@ -236,6 +236,8 @@ namespace dxvk {
      Rc<DxvkShaderModule>  m_tes;
      Rc<DxvkShaderModule>  m_gs;
      Rc<DxvkShaderModule>  m_fs;
@@ -92,7 +92,7 @@ index ad1de14..faedc35 100644
      uint32_t m_vsIn  = 0;
      uint32_t m_fsOut = 0;
 diff --git a/src/dxvk/dxvk_shader.cpp b/src/dxvk/dxvk_shader.cpp
-index a838955..701e320 100644
+index 55af858..934c02c 100644
 --- a/src/dxvk/dxvk_shader.cpp
 +++ b/src/dxvk/dxvk_shader.cpp
 @@ -1,7 +1,27 @@
@@ -109,8 +109,8 @@ index a838955..701e320 100644
 +
 +    if (!init) {
 +      if (env::getEnvVar(L"DXVK_USE_PIPECOMPILER") == "1" && env::getEnvVar(L"DXVK_USE_PLACEHOLDER_SHADERS") == "1") {
-+        vs = new DxvkShader(VK_SHADER_STAGE_VERTEX_BIT  , 0, nullptr, {1,1}, SpirvCodeBuffer(vs_placeholder));
-+        fs = new DxvkShader(VK_SHADER_STAGE_FRAGMENT_BIT, 0, nullptr, {1,1}, SpirvCodeBuffer(fs_placeholder));
++        vs = new DxvkShader(VK_SHADER_STAGE_VERTEX_BIT  , 0, nullptr, {1,1}, SpirvCodeBuffer(vs_placeholder), DxvkShaderConstData());
++        fs = new DxvkShader(VK_SHADER_STAGE_FRAGMENT_BIT, 0, nullptr, {1,1}, SpirvCodeBuffer(fs_placeholder), DxvkShaderConstData());
 +        Logger::debug("Using placeholder shaders");
 +      }
 +      init = true;
@@ -120,21 +120,21 @@ index a838955..701e320 100644
 +    frag = fs;
 +  }
 +
-   DxvkShaderModule::DxvkShaderModule(
-     const Rc<vk::DeviceFn>&     vkd,
-     const Rc<DxvkShader>&       shader,
-@@ -110,4 +130,4 @@ namespace dxvk {
-     m_code = SpirvCodeBuffer(inputStream);
+   DxvkShaderConstData::DxvkShaderConstData() {
+ 
+   }
+@@ -143,4 +163,4 @@ namespace dxvk {
+     m_code.store(outputStream);
    }
    
 -}
 \ No newline at end of file
 +}
 diff --git a/src/dxvk/dxvk_shader.h b/src/dxvk/dxvk_shader.h
-index 0aa092d..4ab3c31 100644
+index 5170390..15b57d2 100644
 --- a/src/dxvk/dxvk_shader.h
 +++ b/src/dxvk/dxvk_shader.h
-@@ -214,4 +214,6 @@ namespace dxvk {
+@@ -259,4 +259,6 @@ namespace dxvk {
      
    };
    
@@ -144,10 +144,10 @@ index 0aa092d..4ab3c31 100644
 +
 +}
 diff --git a/src/dxvk/meson.build b/src/dxvk/meson.build
-index 3c21bb1..c700f17 100644
+index 46bf089..44de228 100644
 --- a/src/dxvk/meson.build
 +++ b/src/dxvk/meson.build
-@@ -21,6 +21,9 @@ dxvk_shaders = files([
+@@ -27,6 +27,9 @@ dxvk_shaders = files([
    'hud/shaders/hud_line.frag',
    'hud/shaders/hud_text.frag',
    'hud/shaders/hud_vert.vert',
@@ -157,7 +157,7 @@ index 3c21bb1..c700f17 100644
  ])
  
  dxvk_src = files([
-@@ -93,4 +96,4 @@ dxvk_lib = static_library('dxvk', dxvk_src, glsl_generator.process(dxvk_shaders)
+@@ -99,4 +102,4 @@ dxvk_lib = static_library('dxvk', dxvk_src, glsl_generator.process(dxvk_shaders)
  
  dxvk_dep = declare_dependency(
    link_with           : [ dxvk_lib ],
