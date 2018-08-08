@@ -1,15 +1,3 @@
-diff --git a/README.md b/README.md
-index 3ac2dc8..5ad128d 100644
---- a/README.md
-+++ b/README.md
-@@ -86,6 +86,7 @@ The following environment variables can be used for **debugging** purposes.
- - `DXVK_LOG_LEVEL=none|error|warn|info|debug` Controls message logging
- - `DXVK_FAKE_DX10_SUPPORT=1` Advertizes support for D3D10 interfaces
- - `DXVK_USE_PIPECOMPILER=1` Enable asynchronous pipeline compilation. This currently only has an effect on RADV in mesa-git.
-+- `DXVK_USE_PLACEHOLDER_SHADERS=1` Use placeholder discard shaders while real shaders are compiling. Needs asynchronous pipeline compilation. **Will lead to graphical glitches**.
- 
- ## Troubleshooting
- DXVK requires threading support from your mingw-w64 build environment. If you
 diff --git a/src/dxvk/dxvk_graphics.cpp b/src/dxvk/dxvk_graphics.cpp
 index 52440c9..1562416 100644
 --- a/src/dxvk/dxvk_graphics.cpp
@@ -92,7 +80,7 @@ index cd860b3..e362cef 100644
      uint32_t m_vsIn  = 0;
      uint32_t m_fsOut = 0;
 diff --git a/src/dxvk/dxvk_shader.cpp b/src/dxvk/dxvk_shader.cpp
-index 55af858..934c02c 100644
+index 55af858..830f75b 100644
 --- a/src/dxvk/dxvk_shader.cpp
 +++ b/src/dxvk/dxvk_shader.cpp
 @@ -1,7 +1,27 @@
@@ -108,7 +96,7 @@ index 55af858..934c02c 100644
 +    static DxvkShader* fs;
 +
 +    if (!init) {
-+      if (env::getEnvVar(L"DXVK_USE_PIPECOMPILER") == "1" && env::getEnvVar(L"DXVK_USE_PLACEHOLDER_SHADERS") == "1") {
++      if (env::getEnvVar(L"DXVK_USE_PLACEHOLDER_SHADERS") == "1") {
 +        vs = new DxvkShader(VK_SHADER_STAGE_VERTEX_BIT  , 0, nullptr, {1,1}, SpirvCodeBuffer(vs_placeholder), DxvkShaderConstData());
 +        fs = new DxvkShader(VK_SHADER_STAGE_FRAGMENT_BIT, 0, nullptr, {1,1}, SpirvCodeBuffer(fs_placeholder), DxvkShaderConstData());
 +        Logger::debug("Using placeholder shaders");
@@ -144,7 +132,7 @@ index 5170390..15b57d2 100644
 +
 +}
 diff --git a/src/dxvk/meson.build b/src/dxvk/meson.build
-index 46bf089..44de228 100644
+index 5eef2f1..d5ad066 100644
 --- a/src/dxvk/meson.build
 +++ b/src/dxvk/meson.build
 @@ -27,6 +27,9 @@ dxvk_shaders = files([
@@ -157,7 +145,7 @@ index 46bf089..44de228 100644
  ])
  
  dxvk_src = files([
-@@ -99,4 +102,4 @@ dxvk_lib = static_library('dxvk', dxvk_src, glsl_generator.process(dxvk_shaders)
+@@ -100,4 +103,4 @@ dxvk_lib = static_library('dxvk', dxvk_src, glsl_generator.process(dxvk_shaders)
  
  dxvk_dep = declare_dependency(
    link_with           : [ dxvk_lib ],
