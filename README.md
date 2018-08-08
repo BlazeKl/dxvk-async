@@ -19,8 +19,8 @@ and compile, or download already compiled binary from release tab
 ### Instructions
 
 * patch dxvk with pipeline.patch
-* Set env variables:
-  * DXVK_USE_PIPECOMPILER=1
+* Set ```dxvk.useAsyncPipeCompiler = True``` in dxvk.conf
+* Set env variable:
   * DXVK_USE_PLACEHOLDER_SHADERS=1
 
-**Do not report issues to DXVK github even if you dont use the env variables, this hack could introduce new bugs even without them**
+**Do not report issues to DXVK github even if you dont use the env variable, this hack could introduce new bugs even without them**
